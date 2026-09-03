@@ -773,7 +773,7 @@
                         <div class="card-body" style="padding: 0;">
                             <div v-for="(weekSchedules, weekStart) in groupedSchedule" :key="weekStart">
                                 <div style="padding: 12px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary);">
-                                    Неделя {{ weekStart }}
+                                    {{ weekStart }}
                                 </div>
                                 <div 
                                     v-for="schedule in weekSchedules" 
@@ -781,9 +781,6 @@
                                     class="assignment-item"
                                     :class="{ 'assignment-completed': schedule.completed }"
                                 >
-                                    <div class="assignment-avatar" :style="{ background: getDayColor(schedule.dayOfWeek) }">
-                                        {{ getDayInitial(schedule.dayOfWeek) }}
-                                    </div>
                                     <div class="assignment-info">
                                         <div class="assignment-person">{{ schedule.personName }}</div>
                                         <div class="assignment-place-container">
@@ -795,9 +792,9 @@
                                                 <span class="mdi mdi-office-building"></span>
                                                 {{ schedule.placeName }}
                                             </div>
-                                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
-                                                {{ schedule.startDate }} - {{ schedule.endDate }}
-                                            </div>
+<!--                                            <div style="font-size: 0.75rem; color: var(&#45;&#45;text-secondary); margin-top: 4px;">-->
+<!--                                                {{ schedule.startDate }} - {{ schedule.endDate }}-->
+<!--                                            </div>-->
                                         </div>
                                     </div>
                                     <div 
@@ -1202,7 +1199,8 @@
                 const groupedSchedule = computed(() => {
                     const groups = {};
                     weekSchedule.value.forEach(schedule => {
-                        const key = schedule.startDate;
+                        const date = new Date(schedule.startDate)
+                        const key = date.toLocaleDateString();
                         if (!groups[key]) groups[key] = [];
                         groups[key].push(schedule);
                     });
