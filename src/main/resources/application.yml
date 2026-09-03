@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: clean-schedule
+  datasource:
+    url: jdbc:sqlite:${DB_PATH:clean-schedule.db}
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}

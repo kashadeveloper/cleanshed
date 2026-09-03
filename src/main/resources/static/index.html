@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="description" content="График уборки в общежитии">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-167x167.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+
+    <!-- Safari Pinned Tab -->
+    <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#007AFF">
+    <title>Cleanshed - График уборки</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2196F3;
+            --primary-dark: #1976D2;
+            --primary-light: #BBDEFB;
+            --primary-50: #E3F2FD;
+            --secondary: #03A9F4;
+            --accent: #00BCD4;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --error: #F44336;
+            --text: #212121;
+            --text-secondary: #757575;
+            --background: #F5F5F5;
+            --surface: #FFFFFF;
+            --border: #E0E0E0;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header-title .icon {
+            font-size: 2rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 100px;
+            padding: 14px 16px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background: var(--primary-50);
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .nav-tab .tab-icon {
+            display: block;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .content-area {
+            padding: 16px;
+            min-height: calc(100vh - 140px);
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .today-header {
+            background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-light) 100%);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .today-date {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .today-day {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .assignment-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .assignment-item:last-child {
+            border-bottom: none;
+        }
+
+        .assignment-item:hover {
+            background: var(--primary-50);
+        }
+
+        .assignment-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .assignment-info {
+            flex: 1;
+            gap: 1em;
+        }
+
+        .assignment-person {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .assignment-place {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.2em;
+        }
+
+        .assignment-place-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3em;
+        }
+
+        .assignment-status {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .assignment-status:hover {
+            border-color: var(--primary);
+            background: var(--primary-50);
+        }
+
+        .assignment-status.completed {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .assignment-completed {
+            opacity: 0.6;
+        }
+
+        .assignment-completed .assignment-person,
+        .assignment-completed .assignment-place {
+            text-decoration: line-through;
+            color: var(--text-secondary) !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-50);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #43A047;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #E53935;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item-info {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .list-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .chip-primary {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .chip-success {
+            background: #C8E6C9;
+            color: #2E7D32;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--primary-50);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .admin-login {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .admin-login .card {
+            border: 1px solid var(--border);
+        }
+
+        .admin-panel {
+            display: grid;
+            gap: 16px;
+        }
+
+        .admin-section {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .admin-section-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-section-body {
+            padding: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-item label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 300;
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--error);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .header-title h1 {
+                font-size: 1.2rem;
+            }
+
+            .nav-tab {
+                padding: 12px 8px;
+                font-size: 0.75rem;
+            }
+
+            .nav-tab .tab-icon {
+                font-size: 1.1rem;
+            }
+
+            .assignment-item {
+                padding: 12px 16px;
+            }
+
+            .assignment-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="header-title">
+                        <span class="icon mdi mdi-broom"></span>
+                        <h1>Cleanshed</h1>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button @click="goToAdmin" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white;">
+                            <span class="mdi mdi-cog"></span>
+                        </button>
+                        <button v-if="isAdmin" @click="logout" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white;">
+                            Выйти
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navigation -->
+            <nav class="nav-tabs" v-if="!isAdminPage">
+                <button 
+                    class="nav-tab" 
+                    :class="{ active: currentTab === 'today' }"
+                    @click="currentTab = 'today'"
+                >
+                    <span class="tab-icon mdi mdi-calendar-today"></span>
+                    Сегодня
+                </button>
+                <button 
+                    class="nav-tab" 
+                    :class="{ active: currentTab === 'schedule' }"
+                    @click="currentTab = 'schedule'"
+                >
+                    <span class="tab-icon mdi mdi-calendar-week"></span>
+                    График
+                </button>
+
+                <button 
+                    class="nav-tab" 
+                    :class="{ active: currentTab === 'stats' }"
+                    @click="currentTab = 'stats'"
+                >
+                    <span class="tab-icon mdi mdi-chart-bar"></span>
+                    Статистика
+                </button>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="content-area" v-if="!isAdminPage">
+                <!-- Today Tab -->
+                <div v-if="currentTab === 'today'">
+                    <div class="today-header">
+                        <div class="today-date">{{ formatTodayDate }}</div>
+                        <div class="today-day">{{ formatTodayDay }}</div>
+                    </div>
+
+                    <div class="card" v-if="todaySchedule.assignments.length > 0">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="mdi mdi-broom"></span>
+                                Задачи на сегодня
+                            </div>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div 
+                                v-for="assignment in sortedTodayAssignments" 
+                                :key="assignment.scheduleId"
+                                class="assignment-item"
+                                :class="{ 'assignment-completed': assignment.completed }"
+                            >
+                                <div class="assignment-avatar">
+                                    {{ getInitials(assignment.personName) }}
+                                </div>
+                                <div class="assignment-info">
+                                    <div class="assignment-person">{{ assignment.personName }}</div>
+                                    <div class="assignment-place-container">
+                                        <div class="assignment-place" style="color: var(--success);">
+                                            <span class="mdi mdi-map-marker"></span>
+                                            <strong>{{ assignment.placeLocation }}</strong>
+                                        </div>
+                                        <div class="assignment-place">
+                                            <span class="mdi mdi-office-building"></span>
+                                            {{ assignment.placeName }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div 
+                                    class="assignment-status"
+                                    :class="{ completed: assignment.completed }"
+                                    @click="toggleComplete(assignment)"
+                                >
+                                    <span v-if="assignment.completed" class="mdi mdi-check"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" v-else>
+                        <span class="icon mdi mdi-calendar-blank"></span>
+                        <h3>Нет задач на сегодня</h3>
+                        <p>График уборки ещё не составлен</p>
+                    </div>
+                </div>
+
+                <!-- Schedule Tab -->
+                <div v-if="currentTab === 'schedule'">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="mdi mdi-calendar-week"></span>
+                                График уборки
+                            </div>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div v-for="(weekSchedules, weekStart) in groupedSchedule" :key="weekStart">
+                                <div style="padding: 12px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary);">
+                                    Неделя {{ weekStart }}
+                                </div>
+                                <div 
+                                    v-for="schedule in weekSchedules" 
+                                    :key="schedule.id"
+                                    class="assignment-item"
+                                    :class="{ 'assignment-completed': schedule.completed }"
+                                >
+                                    <div class="assignment-avatar" :style="{ background: getDayColor(schedule.dayOfWeek) }">
+                                        {{ getDayInitial(schedule.dayOfWeek) }}
+                                    </div>
+                                    <div class="assignment-info">
+                                        <div class="assignment-person">{{ schedule.personName }}</div>
+                                        <div class="assignment-place-container">
+                                            <div class="assignment-place" style="color: var(--success);">
+                                                <span class="mdi mdi-map-marker"></span>
+                                                <strong>{{ schedule.placeLocation || '—' }}</strong>
+                                            </div>
+                                            <div class="assignment-place">
+                                                <span class="mdi mdi-office-building"></span>
+                                                {{ schedule.placeName }}
+                                            </div>
+                                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+                                                {{ schedule.startDate }} - {{ schedule.endDate }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div 
+                                        class="assignment-status"
+                                        :class="{ completed: schedule.completed }"
+                                        @click="toggleScheduleComplete(schedule)"
+                                    >
+                                        <span v-if="schedule.completed" class="mdi mdi-check"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" v-if="weekSchedule.length === 0">
+                        <span class="icon mdi mdi-calendar-blank"></span>
+                        <h3>График пуст</h3>
+                        <p>Сгенерируйте график для начала работы</p>
+                    </div>
+                </div>
+
+                <!-- Stats Tab -->
+                <div v-if="currentTab === 'stats'">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ persons.length }}</div>
+                            <div class="stat-label">Человек</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ places.length }}</div>
+                            <div class="stat-label">Мест</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ weekSchedule.length }}</div>
+                            <div class="stat-label">Задач на неделю</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ completedCount }}</div>
+                            <div class="stat-label">Выполнено</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="mdi mdi-chart-bar"></span>
+                                Статистика по местам
+                            </div>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div 
+                                v-for="place in places" 
+                                :key="place.id"
+                                class="list-item"
+                            >
+                                <div class="list-item-info">
+                                    <div class="list-item-title">{{ place.name }}</div>
+                                    <div class="list-item-subtitle">{{ place.location }}</div>
+                                </div>
+                                <div class="chip chip-primary">
+                                    {{ getPlaceCount(place.id) }} уборок
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Admin Page -->
+        <div v-if="isAdminPage">
+            <div style="margin-bottom: 16px; padding: 0 20px;">
+                <a href="/" style="color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="mdi mdi-arrow-left"></span>
+                    Назад
+                </a>
+            </div>
+            <!-- Login -->
+            <div v-if="!isAdmin" class="admin-login">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="mdi mdi-lock"></span>
+                            Вход в админку
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">Мастер-пароль</label>
+                            <input 
+                                type="password" 
+                                class="form-input" 
+                                v-model="adminPassword"
+                                @keyup.enter="login"
+                                placeholder="Введите пароль"
+                            >
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;" @click="login">
+                            <span class="mdi mdi-login"></span>
+                            Войти
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel -->
+            <div v-else class="admin-panel">
+                        <div class="admin-section">
+                            <div class="admin-section-header">
+                                <span class="mdi mdi-key"></span>
+                                Мастер-пароль
+                            </div>
+                            <div class="admin-section-body">
+                                <p style="margin-bottom: 12px; color: var(--text-secondary);">
+                                    Текущий пароль: <strong>{{ currentMasterPassword || 'Не загружен' }}</strong>
+                                </p>
+                                <button class="btn btn-secondary" @click="loadMasterPassword">
+                                    <span class="mdi mdi-eye"></span>
+                                    Показать пароль
+                                </button>
+                                <button class="btn btn-danger" style="margin-left: 8px;" @click="resetPassword">
+                                    <span class="mdi mdi-refresh"></span>
+                                    Сбросить пароль
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="admin-section-header">
+                                <span class="mdi mdi-auto-fix"></span>
+                                Генерация графика
+                            </div>
+                            <div class="admin-section-body">
+                                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                                        <label class="form-label">День недели</label>
+                                        <select class="form-select" v-model="generateForm.dayOfWeek">
+                                            <option value="MONDAY">Понедельник</option>
+                                            <option value="TUESDAY">Вторник</option>
+                                            <option value="WEDNESDAY">Среда</option>
+                                            <option value="THURSDAY">Четверг</option>
+                                            <option value="FRIDAY">Пятница</option>
+                                            <option value="SATURDAY">Суббота</option>
+                                            <option value="SUNDAY">Воскресенье</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0; min-width: 120px;">
+                                        <label class="form-label">Недель</label>
+                                        <input type="number" class="form-input" v-model.number="generateForm.weeks" min="1">
+                                    </div>
+                                    <button class="btn btn-success" @click="generateSchedule">
+                                        <span class="mdi mdi-auto-fix"></span>
+                                        Сгенерировать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="admin-section-header">
+                                <span class="mdi mdi-account-group"></span>
+                                Люди
+                                <button class="btn btn-primary btn-sm" style="margin-left: auto;" @click="showPersonModal = true; resetPersonForm()">
+                                    <span class="mdi mdi-plus"></span>
+                                    Добавить
+                                </button>
+                            </div>
+                            <div class="admin-section-body" style="padding: 0;">
+                                <div 
+                                    v-for="person in persons" 
+                                    :key="person.id"
+                                    class="list-item"
+                                >
+                                    <div class="list-item-info">
+                                        <div class="list-item-title">{{ person.name }}</div>
+                                        <div class="list-item-subtitle">
+                                            Комната: {{ person.room }}
+                                            <span class="chip chip-primary" v-if="person.allowedPlaceIds.length > 0" style="margin-left: 8px;">
+                                                {{ person.allowedPlaceIds.length }} мест
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="list-item-actions">
+                                        <button class="btn btn-secondary btn-sm" @click="editPerson(person)">
+                                            <span class="mdi mdi-pencil"></span>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" @click="deletePerson(person.id)">
+                                            <span class="mdi mdi-delete"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="empty-state" v-if="persons.length === 0" style="padding: 30px;">
+                                    <p>Нет людей</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="admin-section-header">
+                                <span class="mdi mdi-map-marker"></span>
+                                Места уборки
+                                <button class="btn btn-primary btn-sm" style="margin-left: auto;" @click="showPlaceModal = true; resetPlaceForm()">
+                                    <span class="mdi mdi-plus"></span>
+                                    Добавить
+                                </button>
+                            </div>
+                            <div class="admin-section-body" style="padding: 0;">
+                                <div 
+                                    v-for="place in places" 
+                                    :key="place.id"
+                                    class="list-item"
+                                >
+                                    <div class="list-item-info">
+                                        <div class="list-item-title">{{ place.name }}</div>
+                                        <div class="list-item-subtitle">
+                                            {{ place.location }}
+                                            <span class="chip chip-success" v-if="place.isCommon" style="margin-left: 8px;">
+                                                Общее
+                                            </span>
+                                            <span class="chip chip-primary" v-else style="margin-left: 8px;">
+                                                Личное
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="list-item-actions">
+                                        <button class="btn btn-secondary btn-sm" @click="editPlace(place)">
+                                            <span class="mdi mdi-pencil"></span>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" @click="deletePlace(place.id)">
+                                            <span class="mdi mdi-delete"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="empty-state" v-if="places.length === 0" style="padding: 30px;">
+                                    <p>Нет мест</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="admin-section-header">
+                                <span class="mdi mdi-account-settings"></span>
+                                Управление местами для людей
+                            </div>
+                            <div class="admin-section-body">
+                                <div v-for="person in persons" :key="person.id" style="margin-bottom: 16px;">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">{{ person.name }} ({{ person.room }})</div>
+                                    <div v-for="place in places" :key="place.id" class="checkbox-item">
+                                        <input 
+                                            type="checkbox" 
+                                            :id="'person-' + person.id + '-place-' + place.id"
+                                            :checked="person.allowedPlaceIds.includes(place.id)"
+                                            @change="togglePersonPlace(person, place)"
+                                        >
+                                        <label :for="'person-' + person.id + '-place-' + place.id">
+                                            {{ place.name }} ({{ place.location }})
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+        <!-- Person Modal -->
+        <div class="modal-overlay" v-if="showPersonModal" @click.self="showPersonModal = false">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">{{ editingPerson ? 'Редактировать' : 'Добавить' }} человека</div>
+                    <button class="btn btn-icon" @click="showPersonModal = false">
+                        <span class="mdi mdi-close"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Имя</label>
+                        <input type="text" class="form-input" v-model="personForm.name" placeholder="Введите имя">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Комната</label>
+                        <input type="text" class="form-input" v-model="personForm.room" placeholder="Номер комнаты">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @click="showPersonModal = false">Отмена</button>
+                    <button class="btn btn-primary" @click="savePerson">
+                        <span class="mdi mdi-check"></span>
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Place Modal -->
+        <div class="modal-overlay" v-if="showPlaceModal" @click.self="showPlaceModal = false">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">{{ editingPlace ? 'Редактировать' : 'Добавить' }} место</div>
+                    <button class="btn btn-icon" @click="showPlaceModal = false">
+                        <span class="mdi mdi-close"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Название</label>
+                        <input type="text" class="form-input" v-model="placeForm.name" placeholder="Название места">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Расположение</label>
+                        <input type="text" class="form-input" v-model="placeForm.location" placeholder="Где находится">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Тип</label>
+                        <select class="form-select" v-model="placeForm.isCommon">
+                            <option :value="true">Общее место</option>
+                            <option :value="false">Личное место</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @click="showPlaceModal = false">Отмена</button>
+                    <button class="btn btn-primary" @click="savePlace">
+                        <span class="mdi mdi-check"></span>
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" v-if="toast.show" :class="toast.type">
+            {{ toast.message }}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.prod.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('SW registered:', registration);
+                })
+                .catch(error => {
+                    console.log('SW registration failed:', error);
+                });
+        }
+    </script>
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // State
+                const currentTab = ref('today');
+                const persons = ref([]);
+                const places = ref([]);
+                const todaySchedule = ref({ assignments: [] });
+                const weekSchedule = ref([]);
+                const statsSummary = ref(null);
+
+                // Modals
+                const showPersonModal = ref(false);
+                const showPlaceModal = ref(false);
+
+                // Forms
+                const personForm = ref({ name: '', room: '' });
+                const placeForm = ref({ name: '', location: '', isCommon: true });
+                const generateForm = ref({ dayOfWeek: 'MONDAY', weeks: 4 });
+                const editingPerson = ref(null);
+                const editingPlace = ref(null);
+
+                // Admin
+                const isAdmin = ref(false);
+                const adminToken = ref(localStorage.getItem('adminToken') || '');
+                const adminPassword = ref('');
+                const currentMasterPassword = ref('');
+
+                // Toast
+                const toast = ref({ show: false, message: '', type: '' });
+                const appReady = ref(false);
+
+                // Computed
+                const formatTodayDate = computed(() => {
+                    const today = new Date();
+                    return today.toLocaleDateString('ru-RU', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                    });
+                });
+
+                const formatTodayDay = computed(() => {
+                    const today = new Date();
+                    return today.toLocaleDateString('ru-RU', { weekday: 'long' });
+                });
+
+                const completedCount = computed(() => {
+                    return weekSchedule.value.filter(s => s.completed).length;
+                });
+
+                const groupedSchedule = computed(() => {
+                    const groups = {};
+                    weekSchedule.value.forEach(schedule => {
+                        const key = schedule.startDate;
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(schedule);
+                    });
+                    return groups;
+                });
+
+                const sortedTodayAssignments = computed(() => {
+                    return [...todaySchedule.value.assignments].sort((a, b) => {
+                        if (a.completed === b.completed) return 0;
+                        return a.completed ? 1 : -1;
+                    });
+                });
+
+                const isAdminPage = computed(() => {
+                    return window.location.pathname === '/admin';
+                });
+
+                const goToAdmin = () => {
+                    window.location.href = '/admin';
+                };
+
+                // Methods
+                const showToast = (message, type = '') => {
+                    if (!appReady.value) return;
+                    toast.value = { show: true, message, type };
+                    setTimeout(() => {
+                        toast.value.show = false;
+                    }, 3000);
+                };
+
+                const getInitials = (name) => {
+                    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                };
+
+                const getDayColor = (day) => {
+                    const colors = {
+                        'MONDAY': '#E3F2FD',
+                        'TUESDAY': '#E8F5E9',
+                        'WEDNESDAY': '#FFF3E0',
+                        'THURSDAY': '#F3E5F5',
+                        'FRIDAY': '#FFEBEE',
+                        'SATURDAY': '#E0F7FA',
+                        'SUNDAY': '#F1F8E9'
+                    };
+                    return colors[day] || '#E3F2FD';
+                };
+
+                const getDayInitial = (day) => {
+                    const initials = {
+                        'MONDAY': 'Пн',
+                        'TUESDAY': 'Вт',
+                        'WEDNESDAY': 'Ср',
+                        'THURSDAY': 'Чт',
+                        'FRIDAY': 'Пт',
+                        'SATURDAY': 'Сб',
+                        'SUNDAY': 'Вс'
+                    };
+                    return initials[day] || day[0];
+                };
+
+                const getPlaceCount = (placeId) => {
+                    if (!statsSummary.value) return 0;
+                    let count = 0;
+                    Object.values(statsSummary.value.stats).forEach(personStats => {
+                        count += personStats[placeId] || 0;
+                    });
+                    return count;
+                };
+
+                // API calls
+                const api = async (url, options = {}) => {
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    };
+                    if (adminToken.value) {
+                        headers['X-Admin-Token'] = adminToken.value;
+                    }
+                    const response = await fetch(url, { ...options, headers });
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    return response.json();
+                };
+
+                const loadPersons = async () => {
+                    try {
+                        persons.value = await api('/api/persons');
+                    } catch (e) {
+                        showToast('Ошибка загрузки людей', 'error');
+                    }
+                };
+
+                const loadPlaces = async () => {
+                    try {
+                        places.value = await api('/api/places');
+                    } catch (e) {
+                        showToast('Ошибка загрузки мест', 'error');
+                    }
+                };
+
+                const loadTodaySchedule = async () => {
+                    try {
+                        todaySchedule.value = await api('/api/schedule/today');
+                    } catch (e) {
+                        showToast('Ошибка загрузки графика', 'error');
+                    }
+                };
+
+                const loadWeekSchedule = async () => {
+                    try {
+                        const today = new Date();
+                        const startDate = today.toISOString().split('T')[0];
+                        const endDate = new Date(today.getTime() + generateForm.value.weeks * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                        weekSchedule.value = await api(`/api/schedule/range?startDate=${startDate}&endDate=${endDate}`);
+                    } catch (e) {
+                        showToast('Ошибка загрузки графика', 'error');
+                    }
+                };
+
+                const loadStatsSummary = async () => {
+                    try {
+                        statsSummary.value = await api('/api/schedule/stats/summary');
+                    } catch (e) {
+                        showToast('Ошибка загрузки статистики', 'error');
+                    }
+                };
+
+                // Person CRUD
+                const resetPersonForm = () => {
+                    personForm.value = { name: '', room: '' };
+                    editingPerson.value = null;
+                };
+
+                const editPerson = (person) => {
+                    editingPerson.value = person;
+                    personForm.value = { name: person.name, room: person.room };
+                    showPersonModal.value = true;
+                };
+
+                const savePerson = async () => {
+                    try {
+                        if (editingPerson.value) {
+                            await api(`/api/persons/${editingPerson.value.id}`, {
+                                method: 'PUT',
+                                body: JSON.stringify(personForm.value)
+                            });
+                            showToast('Человек обновлен');
+                        } else {
+                            await api('/api/persons', {
+                                method: 'POST',
+                                body: JSON.stringify(personForm.value)
+                            });
+                            showToast('Человек добавлен');
+                        }
+                        showPersonModal.value = false;
+                        await loadPersons();
+                    } catch (e) {
+                        showToast('Ошибка сохранения', 'error');
+                    }
+                };
+
+                const deletePerson = async (id) => {
+                    if (!confirm('Удалить человека?')) return;
+                    try {
+                        await api(`/api/persons/${id}`, { method: 'DELETE' });
+                        showToast('Человек удален');
+                        await loadPersons();
+                    } catch (e) {
+                        showToast('Ошибка удаления', 'error');
+                    }
+                };
+
+                // Place CRUD
+                const resetPlaceForm = () => {
+                    placeForm.value = { name: '', location: '', isCommon: true };
+                    editingPlace.value = null;
+                };
+
+                const editPlace = (place) => {
+                    editingPlace.value = place;
+                    placeForm.value = { name: place.name, location: place.location, isCommon: place.isCommon };
+                    showPlaceModal.value = true;
+                };
+
+                const savePlace = async () => {
+                    try {
+                        if (editingPlace.value) {
+                            await api(`/api/places/${editingPlace.value.id}`, {
+                                method: 'PUT',
+                                body: JSON.stringify(placeForm.value)
+                            });
+                            showToast('Место обновлено');
+                        } else {
+                            await api('/api/places', {
+                                method: 'POST',
+                                body: JSON.stringify(placeForm.value)
+                            });
+                            showToast('Место добавлено');
+                        }
+                        showPlaceModal.value = false;
+                        await loadPlaces();
+                    } catch (e) {
+                        showToast('Ошибка сохранения', 'error');
+                    }
+                };
+
+                const deletePlace = async (id) => {
+                    if (!confirm('Удалить место?')) return;
+                    try {
+                        await api(`/api/places/${id}`, { method: 'DELETE' });
+                        showToast('Место удалено');
+                        await loadPlaces();
+                    } catch (e) {
+                        showToast('Ошибка удаления', 'error');
+                    }
+                };
+
+                // Schedule
+                const generateSchedule = async () => {
+                    try {
+                        await api('/api/schedule/generate', {
+                            method: 'POST',
+                            body: JSON.stringify(generateForm.value)
+                        });
+                        showToast('График сгенерирован');
+                        await loadWeekSchedule();
+                        await loadTodaySchedule();
+                    } catch (e) {
+                        showToast('Ошибка генерации графика', 'error');
+                    }
+                };
+
+                const toggleComplete = async (assignment) => {
+                    try {
+                        if (assignment.completed) {
+                            await api(`/api/schedule/${assignment.scheduleId}/incomplete`, {
+                                method: 'PUT'
+                            });
+                        } else {
+                            await api(`/api/schedule/${assignment.scheduleId}/complete`, {
+                                method: 'PUT'
+                            });
+                        }
+                        await loadTodaySchedule();
+                        await loadWeekSchedule();
+                    } catch (e) {
+                        showToast('Ошибка обновления', 'error');
+                    }
+                };
+
+                const toggleScheduleComplete = async (schedule) => {
+                    try {
+                        if (schedule.completed) {
+                            await api(`/api/schedule/${schedule.id}/incomplete`, {
+                                method: 'PUT'
+                            });
+                        } else {
+                            await api(`/api/schedule/${schedule.id}/complete`, {
+                                method: 'PUT'
+                            });
+                        }
+                        await loadWeekSchedule();
+                        await loadTodaySchedule();
+                    } catch (e) {
+                        showToast('Ошибка обновления', 'error');
+                    }
+                };
+
+                // Admin
+                const login = async () => {
+                    try {
+                        const response = await api('/api/admin/login', {
+                            method: 'POST',
+                            body: JSON.stringify({ password: adminPassword.value })
+                        });
+                        adminToken.value = response.token;
+                        localStorage.setItem('adminToken', adminToken.value);
+                        isAdmin.value = true;
+                        adminPassword.value = '';
+                        showToast('Вход выполнен');
+                        await loadStatsSummary();
+                    } catch (e) {
+                        showToast('Неверный пароль', 'error');
+                    }
+                };
+
+                const logout = async () => {
+                    try {
+                        await api('/api/admin/logout', { method: 'POST' });
+                    } catch (e) {}
+                    adminToken.value = '';
+                    localStorage.removeItem('adminToken');
+                    isAdmin.value = false;
+                    showToast('Вы вышли из админки');
+                };
+
+                const verifyToken = async () => {
+                    if (!adminToken.value) return;
+                    try {
+                        const response = await api('/api/admin/verify');
+                        isAdmin.value = response.valid;
+                    } catch (e) {
+                        isAdmin.value = false;
+                    }
+                };
+
+                const loadMasterPassword = async () => {
+                    try {
+                        const response = await api('/api/admin/password');
+                        currentMasterPassword.value = response.password;
+                    } catch (e) {
+                        showToast('Ошибка загрузки пароля', 'error');
+                    }
+                };
+
+                const resetPassword = async () => {
+                    if (!confirm('Сбросить мастер-пароль?')) return;
+                    try {
+                        const response = await api('/api/admin/reset-password', {
+                            method: 'POST'
+                        });
+                        currentMasterPassword.value = response.newPassword;
+                        showToast('Пароль сброшен');
+                    } catch (e) {
+                        showToast('Ошибка сброса пароля', 'error');
+                    }
+                };
+
+                const togglePersonPlace = async (person, place) => {
+                    try {
+                        const hasPlace = person.allowedPlaceIds.includes(place.id);
+                        if (hasPlace) {
+                            await api(`/api/persons/${person.id}/allowed-places/${place.id}`, {
+                                method: 'DELETE'
+                            });
+                        } else {
+                            await api(`/api/persons/${person.id}/allowed-places`, {
+                                method: 'POST',
+                                body: JSON.stringify({ placeId: place.id })
+                            });
+                        }
+                        await loadPersons();
+                        showToast('Обновлено');
+                    } catch (e) {
+                        showToast('Ошибка обновления', 'error');
+                    }
+                };
+
+                // Initialize
+                onMounted(async () => {
+                    await verifyToken();
+                    await Promise.all([
+                        loadPersons(),
+                        loadPlaces(),
+                        loadTodaySchedule(),
+                        loadWeekSchedule()
+                    ]);
+                    appReady.value = true;
+                });
+
+                return {
+                    currentTab,
+                    persons,
+                    places,
+                    todaySchedule,
+                    weekSchedule,
+                    statsSummary,
+                    showPersonModal,
+                    showPlaceModal,
+                    personForm,
+                    placeForm,
+                    generateForm,
+                    editingPerson,
+                    editingPlace,
+                    isAdmin,
+                    adminPassword,
+                    currentMasterPassword,
+                    toast,
+                    formatTodayDate,
+                    formatTodayDay,
+                    completedCount,
+                    groupedSchedule,
+                    sortedTodayAssignments,
+                    isAdminPage,
+                    goToAdmin,
+                    getInitials,
+                    getDayColor,
+                    getDayInitial,
+                    getPlaceCount,
+                    resetPersonForm,
+                    editPerson,
+                    savePerson,
+                    deletePerson,
+                    resetPlaceForm,
+                    editPlace,
+                    savePlace,
+                    deletePlace,
+                    generateSchedule,
+                    toggleComplete,
+                    toggleScheduleComplete,
+                    login,
+                    logout,
+                    loadMasterPassword,
+                    resetPassword,
+                    togglePersonPlace
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
