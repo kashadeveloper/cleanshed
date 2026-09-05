@@ -46,12 +46,9 @@ class ScheduleController(
         return ResponseEntity.ok(schedules.map { it.toDto() })
     }
 
-    @GetMapping("/range")
-    fun getScheduleForDateRange(
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate
-    ): ResponseEntity<List<ScheduleDto>> {
-        val schedules = scheduleService.getScheduleForDateRange(startDate, endDate)
+    @GetMapping("/all")
+    fun getAllSchedules(): ResponseEntity<List<ScheduleDto>> {
+        val schedules = scheduleService.getAllSchedules()
         return ResponseEntity.ok(schedules.map { it.toDto() })
     }
 
