@@ -38,4 +38,6 @@ interface CleaningScheduleRepository : JpaRepository<CleaningSchedule, Long> {
         ORDER BY cs.startDate, cs.dayOfWeek
     """)
     fun findByDateRange(startDate: LocalDate, endDate: LocalDate): List<CleaningSchedule>
+
+    fun findAllByOrderByStartDateAsc(): List<CleaningSchedule>
 }

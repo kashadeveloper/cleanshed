@@ -16,6 +16,16 @@
     <!-- Safari Pinned Tab -->
     <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#007AFF">
     <title>Cleanshed - График уборки</title>
+    <script>
+        // Применяем сохранённую тему до отрисовки, чтобы не мигало светлой
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
     <style>
@@ -35,12 +45,48 @@
             --surface: #FFFFFF;
             --border: #E0E0E0;
             --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --bg-secondary: #EEEEEE;
+            --border-color: #E0E0E0;
+            --text-primary: #212121;
+            color-scheme: light;
+        }
+
+        [data-theme="dark"] {
+            --primary: #64B5F6;
+            --primary-dark: #90CAF9;
+            --primary-light: #1E3A4C;
+            --primary-50: #1A2E3D;
+            --text: #E0E0E0;
+            --text-secondary: #9E9E9E;
+            --background: #121212;
+            --surface: #1E1E1E;
+            --border: #333333;
+            --shadow: 0 2px 4px rgba(0,0,0,0.4);
+            --bg-secondary: #252525;
+            --border-color: #333333;
+            --text-primary: #E0E0E0;
+            color-scheme: dark;
+        }
+
+        [data-theme="dark"] .chip-success {
+            background: #1B3A24;
+            color: #81C784;
+        }
+
+        [data-theme="dark"] .app-header {
+            background: linear-gradient(135deg, #1A2E4D 0%, #0F1D33 100%);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        /* Прячем неразобранные Vue-шаблоны до монтирования,
+           иначе v-if-блоки (модалки, тосты) мигают при загрузке */
+        [v-cloak] {
+            display: none !important;
         }
 
         body {
@@ -371,6 +417,8 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 1rem;
+            background: var(--surface);
+            color: var(--text);
             transition: border-color 0.2s;
         }
 
@@ -387,6 +435,7 @@
             border-radius: 8px;
             font-size: 1rem;
             background: var(--surface);
+            color: var(--text);
             cursor: pointer;
         }
 
@@ -655,7 +704,7 @@
     </style>
 </head>
 <body>
-    <div id="app">
+    <div id="app" v-cloak>
         <div class="app-container">
             <!-- Header -->
             <header class="app-header">
@@ -665,6 +714,9 @@
                         <h1>Cleanshed</h1>
                     </div>
                     <div style="display: flex; gap: 8px;">
+                        <button @click="toggleTheme" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white;" :title="theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'">
+                            <span class="mdi" :class="theme === 'dark' ? 'mdi-weather-sunny' : 'mdi-weather-night'"></span>
+                        </button>
                         <button @click="goToAdmin" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white;">
                             <span class="mdi mdi-cog"></span>
                         </button>
@@ -757,7 +809,6 @@
                     <div class="empty-state" v-else>
                         <span class="icon mdi mdi-calendar-blank"></span>
                         <h3>Нет задач на сегодня</h3>
-                        <p>График уборки ещё не составлен</p>
                     </div>
                 </div>
 
@@ -829,7 +880,7 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">{{ weekSchedule.length }}</div>
-                            <div class="stat-label">Задач на неделю</div>
+                            <div class="stat-label">Задач</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">{{ completedCount }}</div>
@@ -1177,6 +1228,20 @@
                 const toast = ref({ show: false, message: '', type: '' });
                 const appReady = ref(false);
 
+                // Theme
+                const theme = ref(document.documentElement.getAttribute('data-theme') || 'light');
+                const syncThemeMeta = () => {
+                    const meta = document.querySelector('meta[name="theme-color"]');
+                    if (meta) meta.setAttribute('content', theme.value === 'dark' ? '#1E1E1E' : '#2196F3');
+                };
+                const toggleTheme = () => {
+                    theme.value = theme.value === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', theme.value);
+                    try { localStorage.setItem('theme', theme.value); } catch (e) {}
+                    syncThemeMeta();
+                };
+                syncThemeMeta();
+
                 // Computed
                 const formatTodayDate = computed(() => {
                     const today = new Date();
@@ -1312,10 +1377,8 @@
 
                 const loadWeekSchedule = async () => {
                     try {
-                        const today = new Date();
-                        const startDate = today.toISOString().split('T')[0];
-                        const endDate = new Date(today.getTime() + generateForm.value.weeks * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                        weekSchedule.value = await api(`/api/schedule/range?startDate=${startDate}&endDate=${endDate}`);
+                        // Грузим весь график целиком, без диапазона дат.
+                        weekSchedule.value = await api('/api/schedule/all');
                     } catch (e) {
                         showToast('Ошибка загрузки графика', 'error');
                     }
@@ -1580,6 +1643,8 @@
                     adminPassword,
                     currentMasterPassword,
                     toast,
+                    theme,
+                    toggleTheme,
                     formatTodayDate,
                     formatTodayDay,
                     completedCount,
