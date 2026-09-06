@@ -82,6 +82,8 @@ class ScheduleService(
      *   only those without an assignment; duplicate assignments occur only when there are more
      *   spots than people, in which case the second spot goes to someone who doesn't have a personal spot that day);
      * - No one cleans the same spot they cleaned the previous week (provided an alternative exists);
+     *   place order is reshuffled every week and any leftover repeat is repaired
+     *   by swapping assignees between two communal spots of the same day;
      * - Workload is balanced using counters within the current generation cycle.
      */
     private fun calculateRotationAssignments(
@@ -99,9 +101,11 @@ class ScheduleService(
         var lastWeekPlaces = mutableMapOf<Long, MutableSet<Long>>()
 
         for (week in 0 until weeks) {
+            val personalWeek = orderedPersonal.shuffled()
+            val commonWeek = orderedCommon.shuffled()
+
             val weeklyLoad = mutableMapOf<Long, Int>()
             val weekAssignments = mutableListOf<Pair<Person, Place>>()
-            val thisWeekPlaces = mutableMapOf<Long, MutableSet<Long>>()
             val busyToday = mutableSetOf<Long>()
             val hasPersonalToday = mutableSetOf<Long>()
 
@@ -110,16 +114,12 @@ class ScheduleService(
                 busyToday.add(person.id)
                 if (!place.isCommon) hasPersonalToday.add(person.id)
                 weeklyLoad[person.id] = (weeklyLoad[person.id] ?: 0) + 1
-                totalCount[person.id] = (totalCount[person.id] ?: 0) + 1
-                pairCount[person.id to place.id] =
-                    (pairCount[person.id to place.id] ?: 0) + 1
-                thisWeekPlaces.getOrPut(person.id) { mutableSetOf() }.add(place.id)
             }
 
             fun repeatPenalty(person: Person, place: Place): Int =
                 if (lastWeekPlaces[person.id]?.contains(place.id) == true) 1000 else 0
 
-            for (place in orderedPersonal) {
+            for (place in personalWeek) {
                 val owners = persons.filter { person ->
                     person.allowedPlaces.any { it.id == place.id }
                 }
@@ -137,7 +137,7 @@ class ScheduleService(
                 record(candidates.filter { score(it) == minScore }.random(), place)
             }
 
-            for (place in orderedCommon) {
+            for (place in commonWeek) {
                 val free = persons.filter { it.id !in busyToday }
                 val pool = if (free.isNotEmpty()) {
                     free
@@ -156,6 +156,34 @@ class ScheduleService(
 
                 val minScore = pool.minOf { score(it) }
                 record(pool.filter { score(it) == minScore }.random(), place)
+            }
+
+            for (i in weekAssignments.indices) {
+                val (person, place) = weekAssignments[i]
+                if (!place.isCommon) continue
+                if (lastWeekPlaces[person.id]?.contains(place.id) != true) continue
+                val j = weekAssignments.indices.firstOrNull { k ->
+                    if (k == i) false
+                    else {
+                        val (other, otherPlace) = weekAssignments[k]
+                        otherPlace.isCommon && other.id != person.id &&
+                            lastWeekPlaces[other.id]?.contains(place.id) != true &&
+                            lastWeekPlaces[person.id]?.contains(otherPlace.id) != true
+                    }
+                }
+                if (j != null) {
+                    val (other, otherPlace) = weekAssignments[j]
+                    weekAssignments[i] = other to place
+                    weekAssignments[j] = person to otherPlace
+                }
+            }
+
+            val thisWeekPlaces = mutableMapOf<Long, MutableSet<Long>>()
+            for ((person, place) in weekAssignments) {
+                totalCount[person.id] = (totalCount[person.id] ?: 0) + 1
+                pairCount[person.id to place.id] =
+                    (pairCount[person.id to place.id] ?: 0) + 1
+                thisWeekPlaces.getOrPut(person.id) { mutableSetOf() }.add(place.id)
             }
 
             weeklyAssignments.add(weekAssignments)
