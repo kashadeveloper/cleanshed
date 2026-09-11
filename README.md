@@ -183,7 +183,7 @@ cleanshed/
 | `GET` | `/api/schedule/today` | Задачи на сегодня |
 | `GET` | `/api/schedule/week/{date}` | График на неделю |
 | `GET` | `/api/schedule/all` | Весь график целиком |
-| `POST` | `/api/schedule/generate` | Генерация графика (старый график удаляется полностью) |
+| `POST` | `/api/schedule/generate` | Генерация графика (старый график и статистика уборок удаляются полностью, возвращает `{"count": N}`) |
 | `PUT` | `/api/schedule/{id}/complete` | Отметить выполненным |
 | `PUT` | `/api/schedule/{id}/incomplete` | Отменить выполнение |
 | `GET` | `/api/schedule/stats` | Статистика уборок |

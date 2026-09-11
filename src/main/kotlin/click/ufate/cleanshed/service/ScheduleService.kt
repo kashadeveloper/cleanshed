@@ -37,7 +37,7 @@ class ScheduleService(
     }
 
     @Transactional
-    fun generateScheduleForDay(dayOfWeek: DayOfWeek, weeks: Int = 4): List<CleaningSchedule> {
+    fun generateScheduleForDay(dayOfWeek: DayOfWeek, weeks: Int = 4): Int {
         val persons = personService.getAllActivePersons().shuffled()
         val places = placeService.getAllActivePlaces()
 
@@ -47,11 +47,12 @@ class ScheduleService(
 
         val startDate = LocalDate.now()
 
+        statsRepository.deleteAll()
         scheduleRepository.deleteAll()
 
         val weeklyAssignments = calculateRotationAssignments(persons, places, weeks)
 
-        val schedules = mutableListOf<CleaningSchedule>()
+        var count = 0
 
         for (week in 0 until weeks) {
             val currentDate = startDate.plusWeeks(week.toLong())
@@ -66,11 +67,12 @@ class ScheduleService(
                     endDate = weekStart,
                     completed = false
                 )
-                schedules.add(scheduleRepository.save(schedule))
+                scheduleRepository.save(schedule)
+                count++
             }
         }
 
-        return schedules
+        return count
     }
 
     /**
@@ -198,16 +200,19 @@ class ScheduleService(
         val schedule = scheduleRepository.findById(scheduleId)
             .orElseThrow { IllegalArgumentException("Schedule not found with id: $scheduleId") }
 
-        schedule.completed = true
-        schedule.completedDate = LocalDate.now()
+        if (!schedule.completed) {
+            schedule.completed = true
+            schedule.completedDate = LocalDate.now()
 
-        val stat = CleaningStats(
-            person = schedule.person,
-            place = schedule.place,
-            cleaningDate = schedule.completedDate!!,
-            completed = true
-        )
-        statsRepository.save(stat)
+            val stat = CleaningStats(
+                person = schedule.person,
+                place = schedule.place,
+                schedule = schedule,
+                cleaningDate = schedule.completedDate!!,
+                completed = true
+            )
+            statsRepository.save(stat)
+        }
 
         return scheduleRepository.save(schedule)
     }
@@ -225,6 +230,7 @@ class ScheduleService(
         return scheduleRepository.save(schedule)
     }
 
+    @Transactional(readOnly = true)
     fun getCleaningStats(personId: Long? = null, placeId: Long? = null): List<CleaningStats> {
         val startDate = LocalDate.now().minusMonths(3)
         val endDate = LocalDate.now()
@@ -240,6 +246,7 @@ class ScheduleService(
         }
     }
 
+    @Transactional(readOnly = true)
     fun getStatsSummary(): Map<String, Any> {
         val startDate = LocalDate.now().minusMonths(3)
         val endDate = LocalDate.now()

@@ -53,10 +53,10 @@ class ScheduleController(
     }
 
     @PostMapping("/generate")
-    fun generateSchedule(@RequestBody request: GenerateScheduleRequest): ResponseEntity<List<ScheduleDto>> {
+    fun generateSchedule(@RequestBody request: GenerateScheduleRequest): ResponseEntity<Map<String, Int>> {
         val dayOfWeek = DayOfWeek.valueOf(request.dayOfWeek.uppercase())
-        val schedules = scheduleService.generateScheduleForDay(dayOfWeek, request.weeks)
-        return ResponseEntity.ok(schedules.map { it.toDto() })
+        val count = scheduleService.generateScheduleForDay(dayOfWeek, request.weeks)
+        return ResponseEntity.ok(mapOf("count" to count))
     }
 
     @PutMapping("/{id}/complete")

@@ -2,8 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2196F3">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="График уборки в общежитии">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icons/icon-192x192.svg">
@@ -17,12 +20,13 @@
     <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#007AFF">
     <title>Cleanshed - График уборки</title>
     <script>
-        // Применяем сохранённую тему до отрисовки, чтобы не мигало светлой
         (function () {
             try {
                 var t = localStorage.getItem('theme');
                 if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', t);
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', t === 'dark' ? '#1A2E4D' : '#2196F3');
             } catch (e) {}
         })();
     </script>
@@ -82,9 +86,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
-        /* Прячем неразобранные Vue-шаблоны до монтирования,
-           иначе v-if-блоки (модалки, тосты) мигают при загрузке */
         [v-cloak] {
             display: none !important;
         }
@@ -94,18 +95,22 @@
             background: var(--background);
             color: var(--text);
             min-height: 100vh;
+            min-height: 100dvh;
         }
 
         .app-container {
             max-width: 800px;
             margin: 0 auto;
             padding: 0;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         .app-header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             padding: 16px 20px;
+            padding-top: calc(16px + env(safe-area-inset-top));
             position: sticky;
             top: 0;
             z-index: 100;
@@ -312,6 +317,33 @@
         .assignment-completed .assignment-place {
             text-decoration: line-through;
             color: var(--text-secondary) !important;
+        }
+
+        .assignment-past {
+            opacity: 0.55;
+        }
+
+        .day-header-past {
+            opacity: 0.7;
+        }
+
+        .past-toggle {
+            width: 100%;
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .past-toggle:hover {
+            color: var(--primary);
         }
 
         .empty-state {
@@ -623,7 +655,7 @@
 
         .toast {
             position: fixed;
-            bottom: 20px;
+            bottom: calc(20px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
             background: var(--text);
@@ -822,15 +854,25 @@
                             </div>
                         </div>
                         <div class="card-body" style="padding: 0;">
-                            <div v-for="(weekSchedules, weekStart) in groupedSchedule" :key="weekStart">
-                                <div style="padding: 12px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary);">
-                                    {{ weekStart }}
+                            <button
+                                v-if="pastGroups.length > 0"
+                                class="past-toggle"
+                                @click="showPastDays = !showPastDays"
+                            >
+                                <span class="mdi" :class="showPastDays ? 'mdi-chevron-up' : 'mdi-chevron-down'"></span>
+                                {{ showPastDays ? 'Скрыть прошедшие дни' : `Показать прошедшие дни (${pastGroups.length})` }}
+                            </button>
+                            <div v-for="group in visibleGroups" :key="group.key">
+                                <div style="padding: 12px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary);"
+                                    :class="{ 'day-header-past': group.isPast }">
+                                    {{ group.key }}
+                                    <span v-if="group.isPast" style="font-weight: 400; font-size: 0.8rem;">· прошедший день</span>
                                 </div>
-                                <div 
-                                    v-for="schedule in weekSchedules" 
+                                <div
+                                    v-for="schedule in group.schedules"
                                     :key="schedule.id"
                                     class="assignment-item"
-                                    :class="{ 'assignment-completed': schedule.completed }"
+                                    :class="{ 'assignment-completed': schedule.completed, 'assignment-past': group.isPast }"
                                 >
                                     <div class="assignment-info">
                                         <div class="assignment-person">{{ schedule.personName }}</div>
@@ -1230,9 +1272,10 @@
 
                 // Theme
                 const theme = ref(document.documentElement.getAttribute('data-theme') || 'light');
+                // theme-color = верх шапки, чтобы статус-бар сливался с ней.
                 const syncThemeMeta = () => {
                     const meta = document.querySelector('meta[name="theme-color"]');
-                    if (meta) meta.setAttribute('content', theme.value === 'dark' ? '#1E1E1E' : '#2196F3');
+                    if (meta) meta.setAttribute('content', theme.value === 'dark' ? '#1A2E4D' : '#2196F3');
                 };
                 const toggleTheme = () => {
                     theme.value = theme.value === 'dark' ? 'light' : 'dark';
@@ -1261,16 +1304,28 @@
                     return weekSchedule.value.filter(s => s.completed).length;
                 });
 
+                // Прошедшие дни по умолчанию свернуты, раскрываются кнопкой.
+                const showPastDays = ref(false);
+
                 const groupedSchedule = computed(() => {
                     const groups = {};
                     weekSchedule.value.forEach(schedule => {
                         const date = new Date(schedule.startDate)
                         const key = date.toLocaleDateString();
-                        if (!groups[key]) groups[key] = [];
-                        groups[key].push(schedule);
+                        if (!groups[key]) groups[key] = { key, dateStr: schedule.startDate, schedules: [] };
+                        groups[key].schedules.push(schedule);
                     });
-                    return groups;
+                    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                    return Object.values(groups)
+                        .map(g => ({ ...g, isPast: g.dateStr < today }))
+                        .sort((a, b) => a.dateStr < b.dateStr ? -1 : 1);
                 });
+
+                const pastGroups = computed(() => groupedSchedule.value.filter(g => g.isPast));
+
+                const visibleGroups = computed(() =>
+                    showPastDays.value ? groupedSchedule.value : groupedSchedule.value.filter(g => !g.isPast)
+                );
 
                 const sortedTodayAssignments = computed(() => {
                     return [...todaySchedule.value.assignments].sort((a, b) => {
@@ -1482,34 +1537,49 @@
                     }
                 };
 
-                // Schedule
+                // Schedule: админка и график — отдельные полные перезагрузки страницы,
+                // поэтому после генерации стейт не обновляем — свежие данные
+                // придут при следующей загрузке. Ответ — только счётчик.
                 const generateSchedule = async () => {
                     try {
-                        await api('/api/schedule/generate', {
+                        const result = await api('/api/schedule/generate', {
                             method: 'POST',
                             body: JSON.stringify(generateForm.value)
                         });
-                        showToast('График сгенерирован');
-                        await loadWeekSchedule();
-                        await loadTodaySchedule();
+                        showToast(`График сгенерирован: ${result.count} задач`);
                     } catch (e) {
                         showToast('Ошибка генерации графика', 'error');
                     }
                 };
 
+                // Один PUT + локальный патч стейта вместо 4 запросов
+                // (раньше было: PUT + GET today + GET all + GET summary).
+                // Сервер возвращает обновлённый ScheduleDto, этого достаточно,
+                // чтобы синхронизировать today/week/stats без перезагрузки.
+                const applyScheduleUpdate = (updated) => {
+                    const ws = weekSchedule.value.find(s => s.id === updated.id);
+                    if (ws) {
+                        ws.completed = updated.completed;
+                        ws.completedDate = updated.completedDate;
+                    }
+                    const ta = todaySchedule.value.assignments?.find(a => a.scheduleId === updated.id);
+                    if (ta) ta.completed = updated.completed;
+                    const stats = statsSummary.value?.stats;
+                    if (stats) {
+                        if (!stats[updated.personId]) stats[updated.personId] = {};
+                        const cur = stats[updated.personId][updated.placeId] || 0;
+                        stats[updated.personId][updated.placeId] =
+                            updated.completed ? cur + 1 : Math.max(0, cur - 1);
+                    }
+                };
+
                 const toggleComplete = async (assignment) => {
                     try {
-                        if (assignment.completed) {
-                            await api(`/api/schedule/${assignment.scheduleId}/incomplete`, {
-                                method: 'PUT'
-                            });
-                        } else {
-                            await api(`/api/schedule/${assignment.scheduleId}/complete`, {
-                                method: 'PUT'
-                            });
-                        }
-                        await loadTodaySchedule();
-                        await loadWeekSchedule();
+                        const action = assignment.completed ? 'incomplete' : 'complete';
+                        const updated = await api(`/api/schedule/${assignment.scheduleId}/${action}`, {
+                            method: 'PUT'
+                        });
+                        applyScheduleUpdate(updated);
                     } catch (e) {
                         showToast('Ошибка обновления', 'error');
                     }
@@ -1517,17 +1587,11 @@
 
                 const toggleScheduleComplete = async (schedule) => {
                     try {
-                        if (schedule.completed) {
-                            await api(`/api/schedule/${schedule.id}/incomplete`, {
-                                method: 'PUT'
-                            });
-                        } else {
-                            await api(`/api/schedule/${schedule.id}/complete`, {
-                                method: 'PUT'
-                            });
-                        }
-                        await loadWeekSchedule();
-                        await loadTodaySchedule();
+                        const action = schedule.completed ? 'incomplete' : 'complete';
+                        const updated = await api(`/api/schedule/${schedule.id}/${action}`, {
+                            method: 'PUT'
+                        });
+                        applyScheduleUpdate(updated);
                     } catch (e) {
                         showToast('Ошибка обновления', 'error');
                     }
@@ -1620,7 +1684,8 @@
                         loadPersons(),
                         loadPlaces(),
                         loadTodaySchedule(),
-                        loadWeekSchedule()
+                        loadWeekSchedule(),
+                        loadStatsSummary()
                     ]);
                     appReady.value = true;
                 });
@@ -1649,6 +1714,9 @@
                     formatTodayDay,
                     completedCount,
                     groupedSchedule,
+                    pastGroups,
+                    visibleGroups,
+                    showPastDays,
                     sortedTodayAssignments,
                     isAdminPage,
                     goToAdmin,
